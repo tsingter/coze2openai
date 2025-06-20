@@ -41,21 +41,19 @@ app.get("/", (req, res) => {
 });
 
 app.post("/v1/chat/completions", async (req, res) => {
-  const authHeader =
-    req.headers["authorization"] || req.headers["Authorization"];
-  if (!authHeader) {
+  const authHeader = req.headers["authorization"] || req.headers["Authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
       code: 401,
-      errmsg: "Unauthorized.",
+      errmsg: "Invalid authorization format. Expected 'Bearer <token>'.",
     });
-  } else {
-    const token = authHeader.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({
-        code: 401,
-        errmsg: "Unauthorized.",
-      });
-    }
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({
+      code: 401,
+      errmsg: "Missing token.",
+    });
   }
   try {
     const data = req.body;
@@ -89,12 +87,12 @@ app.post("/v1/chat/completions", async (req, res) => {
       bot_id: bot_id,
       chat_history: chatHistory
     };
-    const coze_api_url = `https://${coze_api_base}/open_api/v2/chat`;
+    const coze_api_url = `https://${coze_api_base}/v3/chat?`;
     const resp = await fetch(coze_api_url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authHeader.split(" ")[1]}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(requestBody),
     });

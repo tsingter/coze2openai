@@ -9,7 +9,7 @@
     "start": "node app.js"
   },
   "keywords": [],
-  "author": "fatwang2",
+  "author": "ding",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.20.2",

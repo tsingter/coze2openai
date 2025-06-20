@@ -6,7 +6,7 @@ dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
-const coze_api_base = process.env.COZE_API_BASE || "api.coze.com";
+const coze_api_base = process.env.COZE_API_BASE || "api.coze.cn";
 const default_bot_id = process.env.BOT_ID || "";
 const botConfig = process.env.BOT_CONFIG ? JSON.parse(process.env.BOT_CONFIG) : {};
 var corsHeaders = {

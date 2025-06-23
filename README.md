@@ -134,13 +134,6 @@ This project provides some additional configuration items set with environment v
 *   Streaming & Blocking
 *   Docker deployment
 
-## Contact
-Feel free to reach out for any questions or feedback
-
-[X](https://sum4all.site/twitter)\
-[telegram](https://sum4all.site/telegram)
-
-<a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ## License
 This project is licensed under the MIT License.

@@ -102,8 +102,9 @@ app.post("/v1/chat/completions", async (req, res) => {
     let data = req.body;
     let imageFile = req.file;
     
-    // 处理 multipart/form-data 中的图片
+    // 处理 multipart/form-data 中的图片 (直接获取base64数据，不再进行编码)
     if (imageFile) {
+      // 直接从文件读取base64数据（假设已预先处理）
       const base64Data = fs.readFileSync(imageFile.path, "base64");
       fs.unlinkSync(imageFile.path); // 清理临时文件
       
@@ -137,7 +138,7 @@ app.post("/v1/chat/completions", async (req, res) => {
           content_type: "text"
         });
       } 
-      // 处理图片消息
+      // 处理图片消息（直接使用已有的image_data）
       else if (message.content_type === "image" && message.image_data) {
         chatHistory.push({
           role: role,
@@ -184,6 +185,7 @@ app.post("/v1/chat/completions", async (req, res) => {
     
     // 根据消息类型添加查询内容
     if (hasImage) {
+      // 直接传递image对象，包含已处理的base64数据
       requestBody.image = queryObj.image;
     } else {
       requestBody.query = queryString;
@@ -214,10 +216,10 @@ app.post("/v1/chat/completions", async (req, res) => {
     // 处理流式响应
     if (stream) {
       res.setHeader("Content-Type", "text/event-stream");
-      const stream = resp.body;
+      const streamData = resp.body;
       let buffer = "";
 
-      stream.on("data", (chunk) => {
+      streamData.on("data", (chunk) => {
         buffer += chunk.toString();
         let lines = buffer.split("\n");
 
@@ -247,7 +249,7 @@ app.post("/v1/chat/completions", async (req, res) => {
               let chunkContent = chunkObj.message.content;
               let chunkType = chunkObj.message.content_type || "text";
               
-              // 处理图片响应
+              // 处理图片响应（直接使用返回的image数据）
               if (chunkType === "image" && chunkObj.message.image) {
                 chunkContent = chunkObj.message.image.data;
               }
@@ -350,7 +352,7 @@ app.post("/v1/chat/completions", async (req, res) => {
               let result = answerMessage.content;
               let contentType = answerMessage.content_type || "text";
               
-              // 处理图片响应
+              // 处理图片响应（直接使用返回的image数据）
               if (contentType === "image" && answerMessage.image) {
                 result = {
                   content: "[图片]",
@@ -429,4 +431,4 @@ process.on('SIGINT', () => {
     console.log('服务器已关闭');
     process.exit(0);
   });
-});  
+});

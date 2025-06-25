@@ -9,7 +9,7 @@ import path from "path";
 dotenv.config();
 
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit:10mb }));
 const coze_api_base = process.env.COZE_API_BASE || "api.coze.cn";
 const default_bot_id = process.env.BOT_ID || "";
 const botConfig = process.env.BOT_CONFIG ? JSON.parse(process.env.BOT_CONFIG) : {};
@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB 限制
+  limits: { fileSize: 20 * 1024 * 1024 }, // 10MB 限制
 });
 
 var corsHeaders = {

@@ -58,6 +58,9 @@ const upload = multer({
   limits: { fileSize: 30 * 1024 * 1024 }, // 30MB 限制
 });
 
+// 静态资源服务，提供图片 URL 访问
+app.use("/uploads", express.static(uploadDir));
+
 var corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -136,23 +139,19 @@ app.post(
       let data = req.body;
       let imageFile = req.file;
 
-      // 处理 multipart/form-data 中的图片 (直接获取base64数据)
+      // 处理 multipart/form-data 中的图片（现在生成 URL，不再 base64）
       if (imageFile) {
-        let base64Data;
-        try {
-          base64Data = fs.readFileSync(imageFile.path, "base64");
-        } finally {
-          // 无论如何都删除临时文件
-          fs.unlink(imageFile.path, (err) => {
-            if (err) console.error("清理临时文件失败:", err);
-          });
-        }
+        const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${path.basename(imageFile.path)}`;
         if (!data.messages) data.messages = [];
         data.messages.push({
           role: "user",
           content_type: "image",
-          image_data: base64Data,
+          image_url: imageUrl,
           image_type: imageFile.mimetype,
+        });
+        // 删除临时文件
+        fs.unlink(imageFile.path, (err) => {
+          if (err) console.error("清理临时文件失败:", err);
         });
       }
 
@@ -161,7 +160,7 @@ app.post(
       const user = data.user !== undefined ? data.user : "apiuser";
       const stream = data.stream !== undefined ? data.stream : false;
 
-      // 解析消息历史，支持文本和图片
+      // 解析消息历史，支持文本和图片（只处理 image_url，不再处理 image_data）
       const chatHistory = [];
       let hasImage = false;
 
@@ -177,12 +176,12 @@ app.post(
               content: message.content,
               content_type: "text",
             });
-          } else if (message.content_type === "image" && message.image_data) {
+          } else if (message.content_type === "image" && message.image_url) {
             chatHistory.push({
               role: role,
               content_type: "image",
               image: {
-                data: message.image_data,
+                url: message.image_url,
                 type: message.image_type || "image/jpeg",
               },
             });
@@ -196,11 +195,11 @@ app.post(
       let queryString = "";
       let queryObj = { content_type: "text", content: "" };
 
-      if (lastMessage.content_type === "image" && lastMessage.image_data) {
+      if (lastMessage.content_type === "image" && lastMessage.image_url) {
         queryObj = {
           content_type: "image",
           image: {
-            data: lastMessage.image_data,
+            url: lastMessage.image_url,
             type: lastMessage.image_type || "image/jpeg",
           },
         };
@@ -293,7 +292,8 @@ app.post(
 
                     // 处理图片响应
                     if (chunkType === "image" && chunkObj.message.image) {
-                      chunkContent = chunkObj.message.image.data;
+                      // 只返回图片 url
+                      chunkContent = chunkObj.message.image.url;
                     }
 
                     if (chunkContent !== "") {
@@ -305,7 +305,7 @@ app.post(
                         delta = {
                           content: "[图片]",
                           image: {
-                            data: chunkContent,
+                            url: chunkContent,
                             type: chunkObj.message.image.type || "image/jpeg",
                           },
                         };
@@ -400,10 +400,11 @@ app.post(
                 let contentType = answerMessage.content_type || "text";
 
                 if (contentType === "image" && answerMessage.image) {
+                  // 只返回图片 url
                   result = {
                     content: "[图片]",
                     image: {
-                      data: answerMessage.image.data,
+                      url: answerMessage.image.url,
                       type: answerMessage.image.type || "image/jpeg",
                     },
                   };
